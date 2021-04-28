@@ -8,6 +8,7 @@ class DFA:
         self.START_STATE = start_state
         self.ACCEPT_STATES = accept_states
         self.CURRENT_STATE = None
+        self.logs = ""
 
     def run_state_transition(self, input_symbol):
         """Takes in current state and goes to next state based on input symbol."""
@@ -17,8 +18,8 @@ class DFA:
         current_state_dict = self.DELTA.get(self.CURRENT_STATE, "TRAP")
         if current_state_dict != "TRAP":
             next_state = current_state_dict.get(input_symbol, "TRAP")
-            print("CURRENT STATE : {}\tINPUT SYMBOL : {}\t NEXT STATE : {}".format(self.CURRENT_STATE, input_symbol,
-                                                                                   next_state))
+            self.logs += "CURRENT STATE : {}\tINPUT SYMBOL : {}\t NEXT STATE : {}\n".format(self.CURRENT_STATE,
+                                                                                            input_symbol, next_state)
             if next_state != "TRAP":
                 self.CURRENT_STATE = next_state
             else:
@@ -45,4 +46,4 @@ class DFA:
             # Check if new state is not REJECT
             if check_state == 'REJECT':
                 return False
-        return self.check_if_accept()
+        return self.check_if_accept(), self.logs

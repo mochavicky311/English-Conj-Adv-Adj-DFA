@@ -1,5 +1,8 @@
 import string
 import textwrap
+from tkinter import *
+from tkinter import messagebox
+from tkinter.scrolledtext import ScrolledText
 from DFA import DFA
 from TextColor import TextColor
 
@@ -20,14 +23,55 @@ def normalization(text):
     return new_text
 
 
-def print_header(title):
-    print(f"\n{TextColor.HEADER}",
-          f"=================={title}==================",
-          f"{TextColor.NORMAL}\n")
+def run_dfa():
+    output_text = ""
+    input_text = inputField.get("1.0", END)
+    normalized_text = normalization(input_text)
+    word_list = normalized_text.split()
+
+    logField.config(state=NORMAL)
+    logField.delete("1.0", END)
+
+    # if user doesn't input anything or input strings that are not accepted
+    if len(word_list) == 0:
+        messagebox.showerror("Error Message", "Invalid Input. Please enter again.")
+    else:
+        logField.insert(END, "\nLogs Messages\n")
+        logField.insert(END, "\n======================================================================")
+        for word in word_list:
+            logField.insert(END, "\n======================================================================\n")
+            logField.insert(END, f"\nSTRING: {word}\n\n")
+            accepted, logs = myDFA.run_machine(list(word))
+            logField.insert(END, logs)
+
+            if accepted:
+                output_text += f"{TextColor.HIGHLIGHT}{word} "
+                logField.insert(END, "\nSTATUS: Accepted\n")
+            else:
+                output_text += f"{TextColor.NORMAL}{word} "
+                logField.insert(END, "\nSTATUS: Rejected\n")
+
+        logField.insert(END, "\n======================================================================\n")
+
+        print("=======================OUTPUT=======================")
+
+        # Display output text
+        output_text = textwrap.wrap(output_text, width=160)
+
+        print(f"{TextColor.NOTE}NOTE: Words identified are highlighted in cyan.{TextColor.NORMAL}\n")
+
+        for line in output_text:
+            print(line)
+
+    print(TextColor.NORMAL)
+    logField.config(state=DISABLED)
 
 
-def print_divider():
-    print("\n===========================================================================================\n")
+def clear_input():
+    inputField.delete("1.0", END)
+    logField.config(state=NORMAL)
+    logField.delete("1.0", END)
+    logField.config(state=DISABLED)
 
 
 if __name__ == "__main__":
@@ -226,39 +270,36 @@ if __name__ == "__main__":
                        'q84', 'q96', 'q99', 'q104', 'q110', 'q119', 'q123', 'q128', 'q131', 'q133', 'q135', 'q143',
                        'q147', 'q150', 'q158', 'q162', 'q166', 'q171', 'q179', 'q186', 'q192', 'q198', 'q204']
     )
-    output_text = ""
 
-    while True:
-        print_header("English Conjunctions, Adverbs and Adjectives Finder")
+    # GUI
+    root = Tk()
+    root.state("zoomed")
+    root.title("English Conjunctions, Adverbs and Adjectives Finder")
 
-        input_text = input("Enter the input text: ")
-        normalized_text = normalization(input_text)
-        word_list = normalized_text.split()
+    frame = LabelFrame(root, text="Input Text", padx=10, pady=10)
+    frame2 = LabelFrame(root, text="More Results", padx=10, pady=10)
 
-        # if user doesn't input anything or input strings that are not accepted
-        if len(word_list) == 0:
-            print(TextColor.ERROR, "\nInput error. Please enter again.", TextColor.NORMAL)
-        else:
-            for word in word_list:
-                print_divider()
-                print(f"{TextColor.BOLD}CURRENT STRING: {word}{TextColor.NORMAL}\n")
-                accepted = myDFA.run_machine(list(word))
+    title = Label(root, text="English Conjunctions, Adverbs and Adjectives Finder")
 
-                if accepted:
-                    output_text += f"{TextColor.HIGHLIGHT}{word} "
-                    print(TextColor.ACCEPT, "\nSTATUS: Accepted", TextColor.NORMAL)
-                else:
-                    output_text += f"{TextColor.NORMAL}{word} "
-                    print(TextColor.REJECT, "\nSTATUS: Rejected", TextColor.NORMAL)
+    inputField = Text(frame, height=10, width=100, wrap=WORD, padx=10, pady=10, bd=0, font=('Helvetica', 10))
+    logField = ScrolledText(frame, height=10, width=70, wrap=WORD, bd=0, bg="#000", fg="#fff", padx=20, pady=10)
+    logField.tag_config("status_accept", foreground="green")
+    logField.tag_config("status_reject", foreground="yellow")
+    outputField = Text(frame2, height=7, width=100, wrap=WORD, padx=10, pady=10, bd=0)
 
-            print_header("=======================OUTPUT=======================")
+    startBtn = Button(frame, text="Start", padx=20, command=run_dfa)
+    againBtn = Button(frame, text="Clear", padx=17, command=clear_input)
+    exitBtn = Button(frame2, text="Exit", padx=20, command=root.quit)
 
-            # Display output text
-            output_text = textwrap.wrap(output_text, width=160)
+    title.pack(pady=20)
+    frame.pack(padx=20, pady=10)
+    inputField.grid(row=1, column=0, columnspan=2)
+    startBtn.grid(row=2, column=0, sticky="E")
+    againBtn.grid(row=3, column=0, sticky="E")
+    logField.grid(row=2, column=1, rowspan=2, pady=10, sticky="E")
+    frame2.pack(padx=20, pady=10)
+    outputField.pack()
+    exitBtn.pack(pady=10)
 
-            print(f"{TextColor.NOTE}NOTE: Words identified are highlighted in cyan.{TextColor.NORMAL}\n")
+    root.mainloop()
 
-            for line in output_text:
-                print(line)
-
-        print(TextColor.NORMAL)
