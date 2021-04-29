@@ -31,7 +31,6 @@ def run_dfa():
     """Run the DFA to find strings that match the required patterns"""
 
     # clear previous logs
-    myDFA.clear_logs()
     logField.config(state=NORMAL)
     logField.delete("1.0", END)
 
@@ -49,6 +48,7 @@ def run_dfa():
 
         # for each word, run DFA to get the status (accepted or rejected)
         for word in word_list:
+            myDFA.clear_logs()
             accepted, logs = myDFA.run_machine(list(word))
             # print logs
             logField.insert(END, f"\nSTRING: {word}\n\n")
@@ -156,7 +156,7 @@ if __name__ == "__main__":
             'q10': {'t': 'q11'},
             'q11': {'i': 'q12'},
             'q12': {'c': 'q13'},
-            'q14': {'i': 'q15', 'r': 'q21'},
+            'q14': {'l': 'q15', 'r': 'q21'},
             'q15': {'a': 'q16', 'u': 'q19'},
             'q16': {'c': 'q17'},
             'q17': {'k': 'q18'},
@@ -207,7 +207,7 @@ if __name__ == "__main__":
             'q70': {'l': 'q54'},
             'q71': {'o': 'q72'},
             'q72': {'d': 'q73'},
-            'q74': {'a': 'q75'},
+            'q74': {'a': 'q75', 'e': 'q77'},
             'q75': {'y': 'q76'},
             'q77': {'e': 'q78'},
             'q78': {'n': 'q79'},
@@ -302,7 +302,7 @@ if __name__ == "__main__":
             'q188': {'h': 'q189', 'o': 'q193'},
             'q189': {'i': 'q190'},
             'q190': {'t': 'q191'},
-            'q191': {'t': 'q191'},
+            'q191': {'e': 'q192'},
             'q193': {'r': 'q194'},
             'q194': {'k': 'q195'},
             'q195': {'i': 'q196'},
