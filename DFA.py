@@ -10,6 +10,9 @@ class DFA:
         self.CURRENT_STATE = None
         self.logs = ""
 
+    def clear_logs(self):
+        self.logs = ""
+
     def run_state_transition(self, input_symbol):
         """Takes in current state and goes to next state based on input symbol."""
         if self.CURRENT_STATE == 'REJECT':

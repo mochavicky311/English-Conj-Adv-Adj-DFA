@@ -1,14 +1,13 @@
 import string
-import textwrap
+from DFA import DFA
 from tkinter import *
 from tkinter import messagebox
 from tkinter.scrolledtext import ScrolledText
-from DFA import DFA
-from TextColor import TextColor
 
 
 def normalization(text):
-    """ Remove punctuations and covert all alphabets to lower case. """
+    """Remove punctuations and covert all alphabets to lower case."""
+
     accepted_alphabet = [char for char in string.ascii_lowercase] + [" "]
 
     # convert all uppercase to lowercase
@@ -24,54 +23,72 @@ def normalization(text):
 
 
 def run_dfa():
-    output_text = ""
+    """Run the DFA to find strings that match the required patterns"""
+
+    # clear previous logs
+    myDFA.clear_logs()
+    logField.config(state=NORMAL)
+    logField.delete("1.0", END)
+
+    detected_words = set()
+
     input_text = inputField.get("1.0", END)
     normalized_text = normalization(input_text)
     word_list = normalized_text.split()
 
-    logField.config(state=NORMAL)
-    logField.delete("1.0", END)
-
-    # if user doesn't input anything or input strings that are not accepted
+    # if user doesn't input anything or input strings that are not accepted, show error message.
     if len(word_list) == 0:
         messagebox.showerror("Error Message", "Invalid Input. Please enter again.")
     else:
-        logField.insert(END, "\nLogs Messages\n")
-        logField.insert(END, "\n======================================================================")
+        logField.insert(END, "\n======================================================================\n")
+
+        # for each word, run DFA to get the status (accepted or rejected)
         for word in word_list:
-            logField.insert(END, "\n======================================================================\n")
-            logField.insert(END, f"\nSTRING: {word}\n\n")
             accepted, logs = myDFA.run_machine(list(word))
+            # print logs
+            logField.insert(END, f"\nSTRING: {word}\n\n")
             logField.insert(END, logs)
 
             if accepted:
-                output_text += f"{TextColor.HIGHLIGHT}{word} "
+                detected_words.add(word)
                 logField.insert(END, "\nSTATUS: Accepted\n")
             else:
-                output_text += f"{TextColor.NORMAL}{word} "
                 logField.insert(END, "\nSTATUS: Rejected\n")
 
-        logField.insert(END, "\n======================================================================\n")
+            logField.insert(END, "\n======================================================================\n")
 
-        print("=======================OUTPUT=======================")
+        # highlight status in the log
+        highlight_pattern(logField, "STATUS: Accepted", "status_accept")
+        highlight_pattern(logField, "STATUS: Rejected", "status_reject")
 
-        # Display output text
-        output_text = textwrap.wrap(output_text, width=160)
+        # highlight detected words in the input text
+        for word in detected_words:
+            highlight_pattern(inputField, " "+word+" ", "highlight")
 
-        print(f"{TextColor.NOTE}NOTE: Words identified are highlighted in cyan.{TextColor.NORMAL}\n")
-
-        for line in output_text:
-            print(line)
-
-    print(TextColor.NORMAL)
     logField.config(state=DISABLED)
 
 
 def clear_input():
+    """Clear all text in the input field and log field"""
     inputField.delete("1.0", END)
     logField.config(state=NORMAL)
     logField.delete("1.0", END)
     logField.config(state=DISABLED)
+
+
+def highlight_pattern(widget, pattern, tag):
+    """Apply the given tag to all text that matches the given string pattern"""
+
+    widget.mark_set("matchStart", "1.0")
+    widget.mark_set("matchEnd", "1.0")
+
+    while True:
+        index = widget.search(pattern, "matchEnd", END, count=len(pattern))
+        if index == "":
+            break
+        widget.mark_set("matchStart", index)
+        widget.mark_set("matchEnd", "%s+%sc" % (index, len(pattern)))
+        widget.tag_add(tag, "matchStart", "matchEnd")
 
 
 if __name__ == "__main__":
@@ -271,26 +288,31 @@ if __name__ == "__main__":
                        'q147', 'q150', 'q158', 'q162', 'q166', 'q171', 'q179', 'q186', 'q192', 'q198', 'q204']
     )
 
-    # GUI
+    # ============= #
+    #      GUI      #
+    # ============= #
+
     root = Tk()
     root.state("zoomed")
     root.title("English Conjunctions, Adverbs and Adjectives Finder")
 
+    # Create widgets
+    title = Label(root, text="English Conjunctions, Adverbs and Adjectives Finder")
     frame = LabelFrame(root, text="Input Text", padx=10, pady=10)
     frame2 = LabelFrame(root, text="More Results", padx=10, pady=10)
-
-    title = Label(root, text="English Conjunctions, Adverbs and Adjectives Finder")
-
     inputField = Text(frame, height=10, width=100, wrap=WORD, padx=10, pady=10, bd=0, font=('Helvetica', 10))
     logField = ScrolledText(frame, height=10, width=70, wrap=WORD, bd=0, bg="#000", fg="#fff", padx=20, pady=10)
-    logField.tag_config("status_accept", foreground="green")
-    logField.tag_config("status_reject", foreground="yellow")
     outputField = Text(frame2, height=7, width=100, wrap=WORD, padx=10, pady=10, bd=0)
-
     startBtn = Button(frame, text="Start", padx=20, command=run_dfa)
     againBtn = Button(frame, text="Clear", padx=17, command=clear_input)
     exitBtn = Button(frame2, text="Exit", padx=20, command=root.quit)
 
+    # Add tags to modify font colors
+    inputField.tag_config("highlight", foreground="green")
+    logField.tag_config("status_accept", foreground="cyan")
+    logField.tag_config("status_reject", foreground="yellow")
+
+    # Display the widgets
     title.pack(pady=20)
     frame.pack(padx=20, pady=10)
     inputField.grid(row=1, column=0, columnspan=2)
@@ -302,4 +324,3 @@ if __name__ == "__main__":
     exitBtn.pack(pady=10)
 
     root.mainloop()
-
