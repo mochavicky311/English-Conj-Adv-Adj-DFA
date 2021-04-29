@@ -66,8 +66,8 @@ def run_dfa():
             logField.insert(END, "\n======================================================================\n")
 
         # highlight status in the log
-        highlight_pattern(logField, "STATUS: Accepted", "status_accept")
-        highlight_pattern(logField, "STATUS: Rejected", "status_reject")
+        highlight_pattern(logField, "STATUS: Accepted", "status_accept", exact=True)
+        highlight_pattern(logField, "STATUS: Rejected", "status_reject", exact=True)
 
         if len(detected_words) != 0:
             # highlight detected words in the input text
@@ -87,15 +87,18 @@ def clear_input():
     logField.config(state=DISABLED)
 
 
-def highlight_pattern(widget, word, tag):
+def highlight_pattern(widget, word, tag, exact=False):
     """Apply the given tag to all text that matches the given string pattern"""
 
     widget.mark_set("matchStart", "1.0")
     widget.mark_set("matchEnd", "1.0")
 
     while True:
-        index = widget.search(r'(^|\n|\W)%s($|\n|\W)' % word, "matchEnd", END, count=len(word) + 1, regexp=True,
-                              nocase=1)
+        if exact:
+            index = widget.search(word, "matchEnd", END, count=len(word))
+        else:
+            index = widget.search(r'(^|\n|\W)%s($|\n|\W)' % word, "matchEnd", END, count=len(word) + 1,
+                                  regexp=True, nocase=1)
         if index == "":
             break
         widget.mark_set("matchStart", index)
