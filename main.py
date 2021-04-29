@@ -63,7 +63,7 @@ def run_dfa():
 
         # highlight detected words in the input text
         for word in detected_words:
-            highlight_pattern(inputField, " "+word+" ", "highlight")
+            highlight_pattern(inputField, word, "highlight")
 
     logField.config(state=DISABLED)
 
@@ -76,23 +76,22 @@ def clear_input():
     logField.config(state=DISABLED)
 
 
-def highlight_pattern(widget, pattern, tag):
+def highlight_pattern(widget, word, tag):
     """Apply the given tag to all text that matches the given string pattern"""
 
     widget.mark_set("matchStart", "1.0")
     widget.mark_set("matchEnd", "1.0")
 
     while True:
-        index = widget.search(pattern, "matchEnd", END, count=len(pattern))
+        index = widget.search(r'(^|\n|\W)%s($|\n|\W)' % word, "matchEnd", END, count=len(word)+1, regexp=True, nocase=1)
         if index == "":
             break
         widget.mark_set("matchStart", index)
-        widget.mark_set("matchEnd", "%s+%sc" % (index, len(pattern)))
+        widget.mark_set("matchEnd", "%s+%sc" % (index, len(word)+1))
         widget.tag_add(tag, "matchStart", "matchEnd")
 
 
 if __name__ == "__main__":
-
     # Initialize the DFA and output text
     myDFA = DFA(
         states=['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10', 'q11', 'q12', 'q13', 'q14', 'q15',
