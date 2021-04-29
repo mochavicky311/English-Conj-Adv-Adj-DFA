@@ -3,6 +3,11 @@ from DFA import DFA
 from tkinter import *
 from tkinter import messagebox
 from tkinter.scrolledtext import ScrolledText
+import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+matplotlib.use("TkAgg")
 
 
 def normalization(text):
@@ -30,7 +35,7 @@ def run_dfa():
     logField.config(state=NORMAL)
     logField.delete("1.0", END)
 
-    detected_words = set()
+    detected_words = {}
 
     input_text = inputField.get("1.0", END)
     normalized_text = normalization(input_text)
@@ -50,7 +55,10 @@ def run_dfa():
             logField.insert(END, logs)
 
             if accepted:
-                detected_words.add(word)
+                if word not in detected_words:
+                    detected_words[word] = 1
+                else:
+                    detected_words[word] += 1
                 logField.insert(END, "\nSTATUS: Accepted\n")
             else:
                 logField.insert(END, "\nSTATUS: Rejected\n")
@@ -65,6 +73,7 @@ def run_dfa():
         for word in detected_words:
             highlight_pattern(inputField, word, "highlight")
 
+        show_chart(detected_words)
     logField.config(state=DISABLED)
 
 
@@ -83,12 +92,33 @@ def highlight_pattern(widget, word, tag):
     widget.mark_set("matchEnd", "1.0")
 
     while True:
-        index = widget.search(r'(^|\n|\W)%s($|\n|\W)' % word, "matchEnd", END, count=len(word)+1, regexp=True, nocase=1)
+        index = widget.search(r'(^|\n|\W)%s($|\n|\W)' % word, "matchEnd", END, count=len(word) + 1, regexp=True,
+                              nocase=1)
         if index == "":
             break
         widget.mark_set("matchStart", index)
-        widget.mark_set("matchEnd", "%s+%sc" % (index, len(word)+1))
+        widget.mark_set("matchEnd", "%s+%sc" % (index, len(word) + 1))
         widget.tag_add(tag, "matchStart", "matchEnd")
+
+
+def show_chart(word_list):
+    """Draw a bar chart showing the number of occurrence for each detected word."""
+
+    chart_win = Tk()
+    chart_win.title("Bar Chart")
+
+    Label(chart_win, text="Occurrence of Each Detected Word", font=('Times', 16, 'bold')).pack()
+
+    figure = Figure(figsize=(16, 5), dpi=100)
+
+    plot = figure.add_subplot(1, 1, 1)
+    plot.bar([word for word in word_list], [word_list[word] for word in word_list])
+    plot.tick_params('x', rotation=90)
+
+    figure.tight_layout()
+
+    canvas = FigureCanvasTkAgg(figure, chart_win)
+    canvas.get_tk_widget().pack(padx=10, pady=10)
 
 
 if __name__ == "__main__":
@@ -296,15 +326,18 @@ if __name__ == "__main__":
     root.title("English Conjunctions, Adverbs and Adjectives Finder")
 
     # Create widgets
-    title = Label(root, text="English Conjunctions, Adverbs and Adjectives Finder")
+    title = Label(root, text="English Conjunctions, Adverbs and Adjectives Finder", font=('Times', 16, 'bold'))
     frame = LabelFrame(root, text="Input Text", padx=10, pady=10)
-    frame2 = LabelFrame(root, text="More Results", padx=10, pady=10)
     inputField = Text(frame, height=10, width=100, wrap=WORD, padx=10, pady=10, bd=0, font=('Helvetica', 10))
-    logField = ScrolledText(frame, height=10, width=70, wrap=WORD, bd=0, bg="#000", fg="#fff", padx=20, pady=10)
-    outputField = Text(frame2, height=7, width=100, wrap=WORD, padx=10, pady=10, bd=0)
-    startBtn = Button(frame, text="Start", padx=20, command=run_dfa)
-    againBtn = Button(frame, text="Clear", padx=17, command=clear_input)
-    exitBtn = Button(frame2, text="Exit", padx=20, command=root.quit)
+    logField = ScrolledText(frame, height=10, width=70, wrap=WORD, bd=0, bg="#000", fg="#fff", padx=20, pady=10,
+                            state=DISABLED, font=('Courier', 10))
+
+    startBtn = Button(frame, text="Start", padx=20, command=run_dfa, bg="green", fg="#fff", bd=0, cursor="mouse")
+    againBtn = Button(frame, text="Clear", padx=17, command=clear_input, bg="green", fg="#fff", bd=0, cursor="mouse")
+    exitBtn = Button(root, text="Exit", padx=20, command=root.quit, bg="#555555", fg="#fff", bd=0, cursor="mouse")
+    startBtn.flash()
+    againBtn.flash()
+    exitBtn.flash()
 
     # Add tags to modify font colors
     inputField.tag_config("highlight", foreground="green")
@@ -312,14 +345,12 @@ if __name__ == "__main__":
     logField.tag_config("status_reject", foreground="yellow")
 
     # Display the widgets
-    title.pack(pady=20)
+    title.pack(pady=10)
     frame.pack(padx=20, pady=10)
     inputField.grid(row=1, column=0, columnspan=2)
     startBtn.grid(row=2, column=0, sticky="E")
     againBtn.grid(row=3, column=0, sticky="E")
     logField.grid(row=2, column=1, rowspan=2, pady=10, sticky="E")
-    frame2.pack(padx=20, pady=10)
-    outputField.pack()
-    exitBtn.pack(pady=10)
+    exitBtn.pack()
 
     root.mainloop()
