@@ -69,11 +69,13 @@ def run_dfa():
         highlight_pattern(logField, "STATUS: Accepted", "status_accept")
         highlight_pattern(logField, "STATUS: Rejected", "status_reject")
 
-        # highlight detected words in the input text
-        for word in detected_words:
-            highlight_pattern(inputField, word, "highlight")
-
-        show_chart(detected_words)
+        if len(detected_words) != 0:
+            # highlight detected words in the input text
+            for word in detected_words:
+                highlight_pattern(inputField, word, "highlight")
+            show_chart(detected_words)
+        else:
+            messagebox.showinfo("Info Message", "No English Conjunctions / Adverbs / Adjectives detected. ")
     logField.config(state=DISABLED)
 
 
